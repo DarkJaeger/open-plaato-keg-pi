@@ -1,0 +1,14 @@
+[Unit]
+Description=OpenPlaato First Boot Setup
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/openplaato/setup.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

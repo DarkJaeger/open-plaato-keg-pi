@@ -1,0 +1,25 @@
+services:
+  open-plaato-keg:
+    image: ghcr.io/darkjaeger/open-plaato-keg:latest
+    container_name: open-plaato-keg
+    ports:
+      - "1234:1234"
+      - "8085:8085"
+    volumes:
+      - keg-db:/db
+    environment:
+      - DATABASE_FILE_PATH=/db/keg_data.bin
+    restart: always
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=86400
+      - WATCHTOWER_CONTAINER_NAMES=open-plaato-keg
+    restart: always
+
+volumes:
+  keg-db:
