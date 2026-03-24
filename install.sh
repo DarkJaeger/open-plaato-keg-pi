@@ -2,6 +2,7 @@
 set -e
 
 INSTALL_DIR="/opt/openplaato"
+REPO_URL="https://raw.githubusercontent.com/DarkJaeger/open-plaato-keg-pi/main"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "==> Installing base dependencies..."
@@ -45,16 +46,17 @@ sed -i "s/^#*host-name=.*/host-name=openplaato/" /etc/avahi/avahi-daemon.conf
 
 echo "==> Creating install directory..."
 mkdir -p "$INSTALL_DIR/db"
+mkdir -p "$INSTALL_DIR/captive-portal"
 
-echo "==> Copying application files..."
-cp "$SCRIPT_DIR/docker-compose.yml" "$INSTALL_DIR/docker-compose.yml"
-cp "$SCRIPT_DIR/setup.sh" "$INSTALL_DIR/setup.sh"
+echo "==> Downloading application files..."
+curl -fsSL "$REPO_URL/docker-compose.yml" -o "$INSTALL_DIR/docker-compose.yml"
+curl -fsSL "$REPO_URL/setup.sh" -o "$INSTALL_DIR/setup.sh"
 chmod +x "$INSTALL_DIR/setup.sh"
-
-cp -r "$SCRIPT_DIR/captive-portal" "$INSTALL_DIR/captive-portal"
+curl -fsSL "$REPO_URL/captive-portal/index.html" -o "$INSTALL_DIR/captive-portal/index.html"
+curl -fsSL "$REPO_URL/captive-portal/connect.py" -o "$INSTALL_DIR/captive-portal/connect.py"
 
 echo "==> Installing hostapd config..."
-cp "$SCRIPT_DIR/hostapd.conf" /etc/hostapd/hostapd.conf
+curl -fsSL "$REPO_URL/hostapd.conf" -o /etc/hostapd/hostapd.conf
 
 # Point hostapd at our config
 if grep -q "^DAEMON_CONF=" /etc/default/hostapd 2>/dev/null; then
@@ -64,10 +66,10 @@ else
 fi
 
 echo "==> Installing dnsmasq config..."
-cp "$SCRIPT_DIR/dnsmasq.conf" /etc/dnsmasq.d/openplaato.conf
+curl -fsSL "$REPO_URL/dnsmasq.conf" -o /etc/dnsmasq.d/openplaato.conf
 
 echo "==> Installing systemd service..."
-cp "$SCRIPT_DIR/openplaato-setup.service" /etc/systemd/system/openplaato-setup.service
+curl -fsSL "$REPO_URL/openplaato-setup.service" -o /etc/systemd/system/openplaato-setup.service
 systemctl daemon-reload
 systemctl enable openplaato-setup
 
