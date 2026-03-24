@@ -19,9 +19,10 @@ echo "==> Installing Docker (official)..."
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 chmod a+r /etc/apt/keyrings/docker.gpg
+# Use bookworm — Docker doesn't have trixie builds yet, bookworm packages work fine
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt-get update -y
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
@@ -70,5 +71,16 @@ cp "$SCRIPT_DIR/openplaato-setup.service" /etc/systemd/system/openplaato-setup.s
 systemctl daemon-reload
 systemctl enable openplaato-setup
 
+# Mark as already configured (WiFi already set up by user)
+if [ -d "/boot/firmware" ]; then
+    touch /boot/firmware/openplaato-configured
+else
+    touch /boot/openplaato-configured
+fi
+
 echo ""
-echo "✅ OpenPlaato installed! Reboot to start setup: sudo reboot"
+echo "✅ OpenPlaato installed!"
+echo ""
+echo "Reboot to start: sudo reboot"
+echo "After reboot, access the web UI at: http://openplaato.local:8085"
+echo "Point your Plaato devices to: $(hostname -I | awk '{print $1}') port 1234"
