@@ -8,7 +8,10 @@ Plug-and-play Raspberry Pi image for [open-plaato-keg](https://github.com/DarkJa
 - Raspberry Pi Zero 2W,3,4,5
 - microSD card (8GB+)
 - Power supply
-
+- Keyboard
+- Hdmi cable
+- For the PiZero2w you will need a Mini Hdmi to Hdmi adapter, and a micro usb hub.
+   
 ## Quick Start
 
 1. Flash **Raspberry Pi OS Lite 64-bit** to SD card (use [Raspberry Pi Imager](https://www.raspberrypi.com/software/))
