@@ -1,10 +1,11 @@
+<a href="https://www.buymeacoffee.com/LocutusOFB"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 # OpenPlaato Pi
 
 Plug-and-play Raspberry Pi image for [open-plaato-keg](https://github.com/DarkJaeger/open-plaato-keg) — your local Plaato cloud replacement.
 
 ## Hardware
 
-- Raspberry Pi Zero 2W
+- Raspberry Pi Zero 2W,3,4,5
 - microSD card (8GB+)
 - Power supply
 
