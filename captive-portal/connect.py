@@ -12,8 +12,6 @@ PORTAL_DIR = os.path.dirname(os.path.abspath(__file__))
 FLAG_FILE_PRIMARY = "/boot/firmware/openplaato-configured"
 FLAG_FILE_FALLBACK = "/boot/openplaato-configured"
 
-WPA_SUPPLICANT_PATH = "/etc/wpa_supplicant/wpa_supplicant.conf"
-
 
 def flag_file_path():
     if os.path.isdir("/boot/firmware"):
@@ -21,52 +19,31 @@ def flag_file_path():
     return FLAG_FILE_FALLBACK
 
 
-def write_wpa_supplicant(ssid: str, password: str) -> None:
-    if password:
-        network_block = (
-            'network={{\n'
-            '    ssid="{ssid}"\n'
-            '    psk="{password}"\n'
-            '    key_mgmt=WPA-PSK\n'
-            '}}\n'
-        ).format(ssid=ssid, password=password)
-    else:
-        network_block = (
-            'network={{\n'
-            '    ssid="{ssid}"\n'
-            '    key_mgmt=NONE\n'
-            '}}\n'
-        ).format(ssid=ssid)
-
-    content = (
-        'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\n'
-        'update_config=1\n'
-        'country=US\n'
-        '\n'
-        + network_block
-    )
-
-    with open(WPA_SUPPLICANT_PATH, "w") as f:
-        f.write(content)
-
-
 def connect_and_reboot(ssid: str, password: str) -> None:
-    write_wpa_supplicant(ssid, password)
-
-    # Stop hotspot services
-    subprocess.run(["systemctl", "stop", "hostapd"], check=False)
-    subprocess.run(["systemctl", "stop", "dnsmasq"], check=False)
-
-    # Reconfigure wlan0
-    subprocess.run(["ip", "addr", "flush", "dev", "wlan0"], check=False)
-    subprocess.run(["wpa_supplicant", "-B", "-i", "wlan0",
-                    "-c", WPA_SUPPLICANT_PATH], check=False)
-    subprocess.run(["dhclient", "wlan0"], check=False)
-
     # Write configured flag
     flag = flag_file_path()
     with open(flag, "w") as f:
         f.write("configured\n")
+
+    # Stop AP services
+    subprocess.run(["systemctl", "stop", "hostapd"], check=False)
+    subprocess.run(["systemctl", "stop", "dnsmasq"], check=False)
+
+    # Add wifi connection via nmcli
+    subprocess.run(["nmcli", "connection", "delete", ssid], check=False)
+    if password:
+        subprocess.run([
+            "nmcli", "device", "wifi", "connect", ssid,
+            "password", password, "ifname", "wlan0"
+        ], check=False)
+    else:
+        subprocess.run([
+            "nmcli", "device", "wifi", "connect", ssid,
+            "ifname", "wlan0"
+        ], check=False)
+
+    # Enable NetworkManager on boot
+    subprocess.run(["systemctl", "enable", "NetworkManager"], check=False)
 
     # Reboot
     subprocess.Popen(["reboot"])
@@ -124,7 +101,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         # Respond before rebooting so the browser receives the JSON
         self.send_json({"success": True})
 
-        # Run connection + reboot in a subprocess so response is flushed first
+        # Run connection + reboot in a thread so response is flushed first
         import threading
         t = threading.Thread(target=connect_and_reboot, args=(ssid, password), daemon=True)
         t.start()
