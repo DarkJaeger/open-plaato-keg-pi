@@ -36,6 +36,11 @@ ip link set wlan0 up
 # Start hostapd
 systemctl start hostapd
 
+# Bounce wlan0 to ensure hostapd takes AP mode
+ip link set wlan0 down
+ip link set wlan0 up
+systemctl restart hostapd
+
 # Start dnsmasq
 systemctl start dnsmasq
 
