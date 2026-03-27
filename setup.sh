@@ -21,7 +21,7 @@ fi
 
 echo "First boot detected — starting hotspot setup mode..."
 
-# Stop and MASK anything that might hold wlan0 (mask prevents respawn)
+# Stop and MASK anything that might interfere (mask prevents socket-triggered respawn)
 systemctl stop wpa_supplicant 2>/dev/null || true
 systemctl disable wpa_supplicant 2>/dev/null || true
 systemctl mask wpa_supplicant 2>/dev/null || true
@@ -29,6 +29,11 @@ systemctl stop NetworkManager 2>/dev/null || true
 systemctl disable NetworkManager 2>/dev/null || true
 systemctl mask NetworkManager 2>/dev/null || true
 killall wpa_supplicant 2>/dev/null || true
+# Stop avahi — must stop socket first or service respawns via socket activation
+systemctl stop avahi-daemon.socket 2>/dev/null || true
+systemctl stop avahi-daemon 2>/dev/null || true
+systemctl mask avahi-daemon.socket 2>/dev/null || true
+systemctl mask avahi-daemon 2>/dev/null || true
 sleep 2
 
 # Unblock wifi radio (required on Pi 4 — rfkill blocks wlan0 by default)
