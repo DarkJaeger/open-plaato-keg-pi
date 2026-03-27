@@ -28,6 +28,10 @@ systemctl disable NetworkManager 2>/dev/null || true
 killall wpa_supplicant 2>/dev/null || true
 sleep 2
 
+# Unblock wifi radio (required on Pi 4 — rfkill blocks wlan0 by default)
+rfkill unblock wifi
+sleep 1
+
 # Assign static IP to wlan0
 ip addr flush dev wlan0
 ip addr add 192.168.4.1/24 dev wlan0
