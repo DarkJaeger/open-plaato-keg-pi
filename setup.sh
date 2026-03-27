@@ -37,7 +37,7 @@ systemctl mask avahi-daemon 2>/dev/null || true
 sleep 2
 
 # Unblock wifi radio (required on Pi 4 — rfkill blocks wlan0 by default)
-rfkill unblock wifi
+rfkill unblock wifi 2>/dev/null || true
 sleep 1
 
 # Bring wlan0 up clean before hostapd
