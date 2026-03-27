@@ -21,10 +21,13 @@ fi
 
 echo "First boot detected — starting hotspot setup mode..."
 
-# Stop anything that might hold wlan0
+# Stop and MASK anything that might hold wlan0 (mask prevents respawn)
 systemctl stop wpa_supplicant 2>/dev/null || true
+systemctl disable wpa_supplicant 2>/dev/null || true
+systemctl mask wpa_supplicant 2>/dev/null || true
 systemctl stop NetworkManager 2>/dev/null || true
 systemctl disable NetworkManager 2>/dev/null || true
+systemctl mask NetworkManager 2>/dev/null || true
 killall wpa_supplicant 2>/dev/null || true
 sleep 2
 
@@ -32,18 +35,18 @@ sleep 2
 rfkill unblock wifi
 sleep 1
 
-# Assign static IP to wlan0
+# Bring wlan0 up clean before hostapd
+ip addr flush dev wlan0
+ip link set wlan0 up
+
+# Start hostapd — it takes ownership of wlan0 in AP mode
+systemctl start hostapd
+sleep 2
+
+# Assign static IP AFTER hostapd is up (hostapd resets the interface)
 ip addr flush dev wlan0
 ip addr add 192.168.4.1/24 dev wlan0
 ip link set wlan0 up
-
-# Start hostapd
-systemctl start hostapd
-
-# Bounce wlan0 to ensure hostapd takes AP mode
-ip link set wlan0 down
-ip link set wlan0 up
-systemctl restart hostapd
 
 # Start dnsmasq
 systemctl start dnsmasq
